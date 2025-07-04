@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import WeatherCard from "./components/WeatherCard";
+import SearchBar from "./components/SearchBar";
+import { fetchCurrentWeather, fetchForecast } from "./services/weatherService";
+import type { WeatherAPIResponse } from "./types/weather";
+import type { ForecastAPIResponse } from "./types/forecast";
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [weather, setWeather] = useState<WeatherAPIResponse | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [forecast, setForecast] = useState<ForecastAPIResponse | null>(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const handleCitySearch = async (city: string) => {
+        try {
+            setError(null);
+            const current = await fetchCurrentWeather(city);
+            const forecastData = await fetchForecast(city);
+            setWeather(current);
+            setForecast(forecastData);
+            console.log(forecast)
+        } catch (err) {
+            setError("City not found 😓");
+            setWeather(null);
+            setForecast(null);
+            console.log(err);
+        }
+    };
+
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex flex-col items-center justify-center p-4">
+            <SearchBar onSearch={handleCitySearch} />
+
+            {error && (
+                <div className="text-red-300 font-semibold mb-4">{error}</div>
+            )}
+
+            {weather && <WeatherCard data={weather} />}
+        </div>
+    );
 }
 
-export default App
+export default App;
